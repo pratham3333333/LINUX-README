@@ -1,3 +1,270 @@
+# Unit 2 - Linux System Administration (RHEL 6)
+
+---
+
+## 1. What is Network Manager? Explain in detail
+**Theory:**
+Network Manager is a system service in Linux that manages and automates network connections. It provides a consistent interface for both wired and wireless networks and supports features such as dynamic configuration, VPN integration, and mobile broadband.
+
+**Features:**
+- Automatic detection of network devices
+- Easy management of connections via GUI, CLI (`nmcli`), and TUI (`nmtui`)
+- Supports various networking technologies like Ethernet, Wi-Fi, PPPoE, etc.
+- Handles DNS and routing changes dynamically
+
+**Example:**
+```bash
+nmcli device
+nmcli connection add type ethernet ifname eth0 con-name office static ip4 192.168.1.100/24 gw4 192.168.1.1
+```
+This sets a static IP address using `nmcli`.
+
+---
+
+## 2. How would you elaborate the nice command? Explain process niceness
+**Theory:**
+The `nice` command in Linux controls the priority of a process. Niceness is a value that affects a process's scheduling priority. A lower nice value means higher priority, and vice versa. Only root can use negative (higher priority) values.
+
+**Nice Value Range:**
+- From -20 (highest priority) to +19 (lowest priority)
+
+**Example - Start a new process with lower priority:**
+```bash
+nice -n 10 gzip bigfile.tar
+```
+
+**Example - Change priority of running process:**
+```bash
+renice -n -5 -p 1234  # PID 1234 priority increased
+```
+
+---
+
+## 3. What is nsswitch? Explain in detail
+**Theory:**
+`nsswitch.conf` is a configuration file that defines how a Linux system should resolve different types of databases like user accounts, hostnames, and passwords. It tells the system where to look for information—files, DNS, LDAP, etc.
+
+**File Location:**
+`/etc/nsswitch.conf`
+
+**Example Entry:**
+```
+hosts: files dns
+passwd: files ldap
+```
+This means: first check local files (like `/etc/hosts`), then query DNS or LDAP as necessary.
+
+---
+
+## 4. How to change ownership of the users with what key sequences?
+**Theory:**
+File and directory ownership can be changed using the `chown` (change owner) command. Ownership includes the user and optionally the group.
+
+**Syntax:**
+```bash
+chown USER[:GROUP] filename
+```
+
+**Example:**
+```bash
+chown alice:staff report.txt
+```
+This changes the owner to `alice` and the group to `staff`.
+
+---
+
+## 5. What is Job Scheduling in RHEL 6? Explain Crontab
+**Theory:**
+Job scheduling allows repetitive tasks to be run automatically using `cron`. The `crontab` file defines what commands are executed and when.
+
+**Command to edit crontab:**
+```bash
+crontab -e
+```
+
+**Crontab Time Format:**
+```
+* * * * * command_to_execute
+│ │ │ │ │
+│ │ │ │ └── Day of the week (0 - 7) (Sunday=0 or 7)
+│ │ │ └──── Month (1 - 12)
+│ │ └────── Day of month (1 - 31)
+│ └──────── Hour (0 - 23)
+└────────── Minute (0 - 59)
+```
+
+**Example - Backup every day at 2 AM:**
+```bash
+0 2 * * * /usr/bin/backup.sh
+```
+
+---
+
+## 6. Explain setting the default permission with umask in RHEL 6
+**Theory:**
+The `umask` value determines the default permissions for newly created files and directories. It works by subtracting the `umask` value from the base permissions (666 for files, 777 for directories).
+
+**Command to check umask:**
+```bash
+umask
+```
+
+**Example:**
+If `umask` is 022:
+- New file permission = 666 - 022 = 644
+- New directory permission = 777 - 022 = 755
+
+**Set temporary umask:**
+```bash
+umask 027
+```
+
+---
+
+## 7. What are the key sequence for user administration in RHEL
+**Key Commands for User Administration:**
+- Create User: `useradd john`
+- Set Password: `passwd john`
+- Modify User: `usermod -s /bin/bash john`
+- Lock Account: `passwd -l john`
+- Delete User: `userdel -r john`
+- View User Info: `id john`
+
+**Example:**
+```bash
+useradd alice
+passwd alice
+usermod -aG wheel alice
+```
+Adds `alice` and makes her a sudoer.
+
+---
+
+## 8. List and explain most useful attributes for security of files in RHEL 6
+**Theory:**
+Linux provides various commands and attributes to secure files:
+- `chmod`: Set file permissions
+- `chown`: Change file owner
+- `umask`: Set default creation permissions
+- `lsattr`: List file attributes
+- `chattr`: Modify file attributes
+
+**Important Attributes with `chattr`:**
+- `+i`: Immutable, cannot be changed or deleted
+- `+a`: Append only
+
+**Example:**
+```bash
+chattr +i confidential.txt
+lsattr confidential.txt
+```
+
+---
+
+## 9. List and explain the parameters for user administration commands
+**Common Parameters:**
+- `useradd -m username`: Create user with home dir
+- `useradd -s /bin/bash`: Specify default shell
+- `usermod -L username`: Lock user account
+- `usermod -aG group username`: Add user to group
+- `passwd -e username`: Force password change on next login
+
+**Example:**
+```bash
+useradd -m -s /bin/bash -G developers raj
+```
+Creates a user `raj` with `/bin/bash` shell and adds to `developers` group.
+
+---
+
+## 10. How would you elaborate creating groups in RHEL 6
+**Theory:**
+Groups help manage file permissions collectively. Users can belong to multiple groups. The `groupadd` and `usermod` commands are used to manage groups.
+
+**Commands:**
+```bash
+groupadd design
+usermod -aG design bob
+```
+**Example:**
+To check groups for user `bob`:
+```bash
+groups bob
+```
+
+---
+
+## 11. How would you discuss managing permission in detail
+**Theory:**
+Linux uses three types of permissions for each file/directory:
+- **Read (r):** View content
+- **Write (w):** Modify content
+- **Execute (x):** Run file (or enter directory)
+
+**Permission Format:**
+```bash
+-rwxr-xr--
+```
+User: rwx, Group: r-x, Others: r--
+
+**Commands:**
+```bash
+chmod 755 script.sh
+chown alice:devteam script.sh
+```
+
+---
+
+## 12. Explain rwx permissions for files and directories
+**Theory:**
+Permissions behave differently for files and directories:
+
+**Files:**
+- `r`: Read file content
+- `w`: Modify file
+- `x`: Execute the file (if script or binary)
+
+**Directories:**
+- `r`: List directory contents
+- `w`: Create/delete files inside
+- `x`: Enter the directory (cd)
+
+**Example:**
+```bash
+chmod 751 /home/alice
+```
+This allows owner full access, group read & execute, others only execute.
+
+---
+
+## 13. How would you elaborate the nice command? Explain process niceness
+(Refer to Answer 2 - Duplicate question. Detailed explanation of `nice` and `renice` with examples already provided.)
+
+---
+
+## 14. List and Elaborate commands for User Management
+**Theory:**
+Linux offers various commands for user account handling. Here are some of the most commonly used ones:
+
+**Commands and Examples:**
+- `useradd john`: Adds a user
+- `passwd john`: Sets password
+- `userdel -r john`: Deletes user and home
+- `usermod -aG wheel john`: Adds to sudo group
+- `id john`: Shows user ID and groups
+
+**Example Use Case:**
+```bash
+useradd -m david
+passwd david
+usermod -aG sudo david
+```
+This creates user `david`, sets a password, and gives him sudo privileges.
+
+---
+
+
+
 # Unit 4 - Server Configuration and Network Services (Theory Questions with Examples)
 
 ---
